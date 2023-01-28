@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserPermission {
+  ADMIN
+  MODERATOR
+  USER
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String   @db.VarChar(50)
+  username     String   @unique @db.VarChar(24)
+  email        String   @unique @db.VarChar(100)
+  password     String   @db.VarChar(160)
+  birthDate    DateTime
+  biography    String?  @db.VarChar(160)
+  localization String?  @db.VarChar(30)
+  site         String?  @db.VarChar(100)
+  avatarUrl    String?  @db.VarChar(350)
+
+  isActive   Boolean        @default(true)
+  permission UserPermission @default(USER)
+  isVerified Boolean        @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  followers UserFollow[] @relation("UserFollow_Follower")
+  following UserFollow[] @relation("UserFollow_Target")
+
+  posts       Post[]
+  likedPosts  PostLike[]
+  sharedPosts PostShare[]
+}
+
+model UserFollow {
+  createdAt DateTime @default(now())
+
+  follower   User   @relation("UserFollow_Follower", fields: [followerId], references: [id])
+  followerId String
+
+  target   User   @relation("UserFollow_Target", fields: [targetId], references: [id])
+  targetId String
+
+  @@id([followerId, targetId])
+}
+
+model Post {
+  id           String  @id @default(uuid())
+  content      String  @db.VarChar(240)
+  localization String? @db.VarChar(30)
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  quotingToId String?
+  quotingTo   Post?   @relation("Post_QuoteToPost", fields: [quotingToId], references: [id])
+  quotedBy    Post[]  @relation("Post_QuoteToPost")
+
+  replyingToId String?
+  replyingTo   Post?   @relation("Post_ReplyToPost", fields: [replyingToId], references: [id])
+  repliedBy    Post[]  @relation("Post_ReplyToPost")
+
+  likes  PostLike[]
+  shares PostShare[]
+}
+
+model PostLike {
+  createdAt DateTime @default(now())
+
+  post   Post   @relation(fields: [postId], references: [id])
+  postId String
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  @@id([postId, userId])
+}
+
+model PostShare {
+  createdAt DateTime @default(now())
+
+  post   Post   @relation(fields: [postId], references: [id])
+  postId String
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  @@id([postId, userId])
+}
