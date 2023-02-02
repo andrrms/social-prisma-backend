@@ -9,7 +9,9 @@ export { USER_REQUIRED_FIELDS } from '../services/users/createUser.service';
 export async function createUserController(req: Request, res: Response) {
   const user = await createUserService(req.body);
 
-  return res.status(201).json(user);
+  return setTimeout(() => {
+    res.status(201).json(user);
+  }, 200);
 }
 
 export async function listUsersController(req: Request, res: Response) {
@@ -25,6 +27,12 @@ export async function retrieveSelfController(req: Request, res: Response) {
   const { id } = req.user;
   const user = await retrieveUserService(id);
 
+  return res.json(user);
+}
+
+export async function retrieveUserController(req: Request, res: Response) {
+  const { term } = req.params;
+  const user = await retrieveUserService(term, req.user.id);
   return res.json(user);
 }
 

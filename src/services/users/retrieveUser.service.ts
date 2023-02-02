@@ -1,10 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { AppError } from '../../errors/AppError';
 import { prisma } from '../../server';
-import { SearchUser } from '../../interfaces/user.interfaces';
 
-export default async function retrieveUserService(id: string, page = 0) {
-  const foundUser = await prisma.user.findUniqueOrThrow({
-    where: { id },
+export default async function retrieveUserService(
+  targetIdOrUsername: string,
+  userId?: string,
+  page = 0
+) {
+  const foundUser = await prisma.user.findFirstOrThrow({
+    where: {
+      OR: [{ id: targetIdOrUsername }, { username: targetIdOrUsername }],
+    },
     include: {
       _count: {
         select: {
@@ -14,6 +20,24 @@ export default async function retrieveUserService(id: string, page = 0) {
       },
     },
   });
+  if (!foundUser) {
+    throw new AppError('User not found', 404);
+  }
+
+  let isFollowing = false;
+  if (userId) {
+    if (
+      await prisma.userFollow.findUnique({
+        where: {
+          followerId_targetId: {
+            followerId: userId,
+            targetId: foundUser.id,
+          },
+        },
+      })
+    )
+      isFollowing = true;
+  }
 
   const {
     _count,
@@ -26,6 +50,7 @@ export default async function retrieveUserService(id: string, page = 0) {
 
   return {
     ...rest,
+    isFollowing,
     followersCount: _count.following,
     followingCount: _count.followers,
   };

@@ -26,7 +26,7 @@ export default async function listUserArticlesService(
           name: true,
           username: true,
           avatarUrl: true,
-          isVerified: true,
+          accountType: true,
           permission: true,
         },
       },

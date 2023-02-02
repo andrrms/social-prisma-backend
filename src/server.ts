@@ -3,7 +3,9 @@ import 'dotenv/config';
 
 import app from './app';
 
-export const prisma = new PrismaClient();
+export const prisma = new PrismaClient({
+  log: ['query'],
+});
 
 async function main() {
   const server = app.listen(process.env.APP_PORT, () => {

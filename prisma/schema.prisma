@@ -16,6 +16,17 @@ enum UserPermission {
   USER
 }
 
+// Paid/Public
+// Enterprise
+// Public
+enum VerificationType {
+  PAID
+  VERIFIED
+  ENTERPRISE
+  PUBLIC
+  NONE
+}
+
 model User {
   id           String   @id @default(uuid())
   name         String   @db.VarChar(50)
@@ -28,9 +39,10 @@ model User {
   site         String?  @db.VarChar(100)
   avatarUrl    String?  @db.VarChar(350)
 
-  isActive   Boolean        @default(true)
-  permission UserPermission @default(USER)
-  isVerified Boolean        @default(false)
+  isActive    Boolean          @default(true)
+  permission  UserPermission   @default(USER)
+  accountType VerificationType @default(NONE)
+  isOfficial  Boolean          @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -82,7 +94,7 @@ model Post {
 model PostLike {
   createdAt DateTime @default(now())
 
-  post   Post   @relation(fields: [postId], references: [id])
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId String
 
   user   User   @relation(fields: [userId], references: [id])
@@ -94,7 +106,7 @@ model PostLike {
 model PostShare {
   createdAt DateTime @default(now())
 
-  post   Post   @relation(fields: [postId], references: [id])
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId String
 
   user   User   @relation(fields: [userId], references: [id])
